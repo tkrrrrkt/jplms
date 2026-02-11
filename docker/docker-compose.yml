@@ -1,0 +1,111 @@
+# ===========================================
+# Japan LMS MVP - Development Environment
+# ===========================================
+# Usage:
+#   cd docker
+#   docker compose up -d
+#
+# First startup takes 3-5 minutes (Moodle installation).
+# Access: http://localhost:8080
+# Admin:  admin / Admin1234! (or values from .env)
+# ===========================================
+
+services:
+  # --- Moodle LMS ---
+  moodle:
+    image: bitnami/moodle:4.5
+    container_name: jplms-moodle
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    environment:
+      - MOODLE_DATABASE_HOST=db
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=${MYSQL_USER:-moodle}
+      - MOODLE_DATABASE_PASSWORD=${MYSQL_PASSWORD:-moodle}
+      - MOODLE_DATABASE_NAME=${MYSQL_DATABASE:-moodle}
+      - MOODLE_USERNAME=${MOODLE_USERNAME:-admin}
+      - MOODLE_PASSWORD=${MOODLE_PASSWORD:-Admin1234!}
+      - MOODLE_EMAIL=${MOODLE_EMAIL:-admin@example.com}
+      - MOODLE_SITE_NAME=${MOODLE_SITE_NAME:-Japan LMS Dev}
+      - MOODLE_DEFAULT_LANGUAGE=${MOODLE_LANGUAGE:-ja}
+      - BITNAMI_DEBUG=true
+    volumes:
+      - moodle_data:/bitnami/moodle
+      - moodledata:/bitnami/moodledata
+      # Custom plugin: bind-mount into Moodle's local/ directory
+      - ../local/timetrack:/bitnami/moodle/local/timetrack
+      # Custom theme: bind-mount into Moodle's theme/ directory
+      - ../theme/lambda_child:/bitnami/moodle/theme/lambda_child
+    depends_on:
+      db:
+        condition: service_healthy
+      redis-session:
+        condition: service_started
+      redis-cache:
+        condition: service_started
+    restart: unless-stopped
+
+  # --- MySQL 8.0 ---
+  db:
+    image: mysql:8.0
+    container_name: jplms-db
+    ports:
+      - "13306:3306"
+    environment:
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-rootpassword}
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-moodle}
+      - MYSQL_USER=${MYSQL_USER:-moodle}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD:-moodle}
+    command: >
+      --character-set-server=utf8mb4
+      --collation-server=utf8mb4_unicode_ci
+      --innodb-file-per-table=1
+      --innodb-buffer-pool-size=256M
+      --slow-query-log=1
+      --long-query-time=2
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-rootpassword}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # --- Redis: Session Store (port 6379) ---
+  redis-session:
+    image: redis:7-alpine
+    container_name: jplms-redis-session
+    command: >
+      redis-server
+      --maxmemory-policy noeviction
+      --appendonly yes
+      --save 60 1000
+    ports:
+      - "16379:6379"
+    volumes:
+      - redis_session_data:/data
+    restart: unless-stopped
+
+  # --- Redis: MUC Cache (port 6380) ---
+  redis-cache:
+    image: redis:7-alpine
+    container_name: jplms-redis-cache
+    command: >
+      redis-server
+      --maxmemory 256mb
+      --maxmemory-policy allkeys-lru
+    ports:
+      - "16380:6379"
+    restart: unless-stopped
+
+volumes:
+  moodle_data:
+    driver: local
+  moodledata:
+    driver: local
+  mysql_data:
+    driver: local
+  redis_session_data:
+    driver: local

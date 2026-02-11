@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<XMLDB PATH="local/timetrack/db" VERSION="20260211" COMMENT="local_timetrack database schema">
+  <TABLES>
+    <!--
+      Table schemas will be defined during CCSDD spec-design phase.
+      Planned tables:
+        - local_timetrack_heartbeat  (raw heartbeat data)
+        - local_timetrack_daily      (daily aggregation)
+        - local_timetrack_total      (cumulative totals)
+        - local_timetrack_video      (video segment tracking)
+    -->
+  </TABLES>
+</XMLDB>

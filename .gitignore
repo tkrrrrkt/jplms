@@ -1,0 +1,44 @@
+# ===========================================
+# Japan LMS MVP - Git Ignore
+# ===========================================
+
+# --- Claude Code local settings ---
+.claude/settings.local.json
+
+# --- OS / Editor ---
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.vscode/settings.json
+
+# --- Environment / Secrets ---
+.env
+*.local
+!.env.example
+
+# --- Docker volumes (if local) ---
+docker/data/
+
+# --- Node.js ---
+node_modules/
+
+# --- PHP ---
+vendor/
+
+# --- Moodle core (NOT committed - lives in Docker) ---
+# If Moodle source is ever cloned locally:
+moodle/
+
+# --- Windows artifacts ---
+nul
+
+# --- Logs ---
+*.log
+
+# --- Temporary files ---
+*.tmp
+*.bak
+*.orig
