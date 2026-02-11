@@ -35,6 +35,8 @@ services:
       - ../local/timetrack:/var/www/html/local/timetrack
       # Custom theme: bind-mount into Moodle's theme/ directory
       - ../theme/lambda_child:/var/www/html/theme/lambda_child
+      # PHP performance tuning
+      - ./php-custom.ini:/usr/local/etc/php/conf.d/99-custom.ini:ro
     environment:
       MOODLE_DOCKER_DBTYPE: mysqli
       MOODLE_DOCKER_DBHOST: db
